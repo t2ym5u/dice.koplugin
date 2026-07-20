@@ -11,4 +11,6 @@ return {
     ["%1 dice"]                             = { fr = "%1 dé(s)" },
     ["Total: %1"]                           = { fr = "Total : %1" },
     ["Faces: %1  |  Dice: %2"]              = { fr = "Faces : %1  |  Dés : %2" },
+    ["Cancel"]                               = { fr = "Annuler" },
+    ["OK"]                                   = { fr = "OK" },
 }
