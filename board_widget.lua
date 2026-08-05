@@ -62,10 +62,11 @@ function DiceBoardWidget:_layout()
 
     -- Reserve space for the "Total: N" line when rolling more than one die.
     local sum_h = 0
+    self.sum_margin = math.floor(mh * 0.04)
     if nd > 1 then
         self.sum_face = Font:getFace("cfont", math.max(14, math.floor(math.min(mw, mh) * 0.06)))
         local m = RenderText:sizeUtf8Text(0, mw, self.sum_face, "0", true, false)
-        sum_h = (m.y_bottom - m.y_top) + math.floor(mh * 0.04)
+        sum_h = m.y_top + m.y_bottom + self.sum_margin
     end
 
     local gap    = math.max(4, math.floor(mw * 0.02))
@@ -158,7 +159,7 @@ function DiceBoardWidget:paintTo(bb, x, y)
         local sum_text = T(_("Total: %1"), board:sum())
         local m  = RenderText:sizeUtf8Text(0, self.w, self.sum_face, sum_text, true, false)
         local sx = x + math.floor((self.w - m.x) / 2)
-        local sy = y + self.grid_h + m.y_bottom
+        local sy = y + self.grid_h + self.sum_margin + m.y_top
         RenderText:renderUtf8Text(bb, sx, sy, self.sum_face, sum_text, true, false, C_TEXT)
     end
 end
