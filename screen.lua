@@ -9,6 +9,8 @@ end
 
 local ButtonTable  = require("ui/widget/buttontable")
 local Device       = require("device")
+local Geom         = require("ui/geometry")
+local GestureRange = require("ui/gesturerange")
 local InputDialog  = require("ui/widget/inputdialog")
 local UIManager    = require("ui/uimanager")
 local _            = require("i18n")
@@ -102,6 +104,28 @@ function DiceScreen:buildLayout()
 
     self:buildPortraitLayout(title_bar, self.board_widget, buttons)
     self:updateStatus()
+
+    -- Let any tap outside the header roll the dice, not just the button.
+    local header_h = title_bar:getSize().h
+    local self_ref = self
+    self.ges_events = {
+        TapToRoll = { GestureRange:new{
+            ges   = "tap",
+            range = function()
+                return Geom:new{
+                    x = self_ref.dimen.x,
+                    y = self_ref.dimen.y + header_h,
+                    w = self_ref.dimen.w,
+                    h = self_ref.dimen.h - header_h,
+                }
+            end,
+        } },
+    }
+end
+
+function DiceScreen:onTapToRoll()
+    self:onRoll()
+    return true
 end
 
 -- ---------------------------------------------------------------------------
