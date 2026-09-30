@@ -2,6 +2,10 @@
 
 A **Dice** plugin for [KOReader](https://github.com/koreader/koreader) — roll one or more virtual dice, with a real dice look, right from the Tools menu.
 
+## Screenshot
+
+![Screenshot](images/dice.png)
+
 ## Concept
 
 Open the plugin, pick a number of faces and a number of dice from the menu (top-left), then tap **Roll**. Six-sided dice are drawn with real pips, just like a physical die; any other face count shows the rolled number instead. Rolling more than one die also shows the total.
