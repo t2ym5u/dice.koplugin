@@ -6,6 +6,21 @@ Reconstructed from this repository's git history: each release lists the
 feature and fix commits it carried. Version bumps, screenshot additions
 and CI syncs are left out.
 
+## [1.1.0] - 2026-10-30
+
+### Changed
+- Redesigned play screen: the dice fill the room left by the status and a
+  full-width Roll bar, and landscape puts the controls beside the dice.
+- Title-bar menu entries show the current values, "Faces: d6" and "Dice: 2",
+  instead of "Number of faces…" / "Number of dice…".
+- The status line reads "2 dice · d6".
+
+### Fixed
+- The Roll button started with a 🎲 emoji the UI fonts have no glyph for, so it
+  showed as a box.
+- The rolled numbers and the total were scaled by DPI twice and could overflow
+  the die on high-DPI screens; they are now fitted and centred.
+
 ## [1.0.13] - 2026-10-07
 
 ### Fixed

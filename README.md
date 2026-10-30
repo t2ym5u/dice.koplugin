@@ -25,9 +25,9 @@ Your last roll and settings are remembered between sessions.
 
 | Action | Effect |
 |--------|--------|
-| **🎲 Roll** | Roll all dice again |
-| **☰ menu → Number of faces…** | Choose faces (presets or custom) |
-| **☰ menu → Number of dice…** | Choose how many dice to roll (1–12) |
+| **Roll** | Roll all dice again |
+| **☰ menu → Faces: d6** | Choose faces (presets or custom) |
+| **☰ menu → Dice: 2** | Choose how many dice to roll (1–12) |
 | **☰ menu → Rules** | Show a quick reminder |
 | **✕** | Close |
 

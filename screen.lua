@@ -7,22 +7,23 @@ local function lrequire(name)
     return package.loaded[key]
 end
 
-local ButtonTable  = require("ui/widget/buttontable")
-local Device       = require("device")
-local Geom         = require("ui/geometry")
-local GestureRange = require("ui/gesturerange")
-local InputDialog  = require("ui/widget/inputdialog")
-local UIManager    = require("ui/uimanager")
-local _            = require("i18n")
-local T            = require("ffi/util").template
+local Geom            = require("ui/geometry")
+local GestureRange    = require("ui/gesturerange")
+local HorizontalGroup = require("ui/widget/horizontalgroup")
+local HorizontalSpan  = require("ui/widget/horizontalspan")
+local InputDialog     = require("ui/widget/inputdialog")
+local Size            = require("ui/size")
+local UIManager       = require("ui/uimanager")
+local VerticalGroup   = require("ui/widget/verticalgroup")
+local VerticalSpan    = require("ui/widget/verticalspan")
+local _               = require("i18n")
+local T               = require("ffi/util").template
 
 local ScreenBase = require("screen_base")
 local MenuHelper = require("menu_helper")
 
 local DiceBoard       = lrequire("board")
 local DiceBoardWidget = lrequire("board_widget")
-
-local DeviceScreen = Device.screen
 
 local FACE_PRESETS = { 4, 6, 8, 10, 12, 20 }
 
@@ -74,35 +75,46 @@ end
 -- ---------------------------------------------------------------------------
 
 function DiceScreen:buildLayout()
-    local sw = DeviceScreen:getWidth()
-    local sh = DeviceScreen:getHeight()
+    local is_landscape = self:isLandscape()
 
     local title_bar = self:buildTitleBar(_("Dice"), function()
         return {
-            { text = _("Number of faces…"), callback = function() self:openFacesMenu() end },
-            { text = _("Number of dice…"),  callback = function() self:openDiceMenu()  end },
+            { text = T(_("Faces: %1"), "d" .. self.board.num_faces), callback = function() self:openFacesMenu() end },
+            { text = T(_("Dice: %1"), self.board.num_dice),          callback = function() self:openDiceMenu()  end },
             self:makeRulesButtonConfig(GAME_RULES_EN, GAME_RULES_FR),
         }
     end)
 
-    local btn_w = math.floor(sw * 0.92)
-    local buttons = ButtonTable:new{
-        shrink_unneeded_width = true,
-        width   = btn_w,
-        buttons = {
-            {
-                { text = "🎲  " .. _("Roll"), callback = function() self:onRoll() end },
-            },
-        },
+    self.status_text:setMaxWidth(self:getControlsWidth())
+    local controls = VerticalGroup:new{
+        align = "center",
+        self.status_text,
+        VerticalSpan:new{ width = Size.span.vertical_large },
+        self:buildActionBar({
+            -- Plain label: the UI fonts have no glyph for the 🎲 emoji
+            -- that used to prefix it, so it rendered as a missing-glyph box.
+            { text = _("Roll"), callback = function() self:onRoll() end },
+        }),
     }
 
+    local budget_w, budget_h = self:getBoardBudget(title_bar, controls)
     self.board_widget = DiceBoardWidget:new{
         board      = self.board,
-        max_width  = math.floor(sw * 0.92),
-        max_height = math.floor(sh * 0.55),
+        max_width  = budget_w,
+        max_height = budget_h,
     }
 
-    self:buildPortraitLayout(title_bar, self.board_widget, buttons)
+    if is_landscape then
+        self:buildLandscapeLayout(title_bar, HorizontalGroup:new{
+            align = "center",
+            self.board_widget,
+            HorizontalSpan:new{ width = self:getGutter() },
+            controls,
+        })
+    else
+        self:buildPortraitLayout(title_bar, self.board_widget,
+            VerticalGroup:new{ align = "center", controls, VerticalSpan:new{ width = self:getGutter() } })
+    end
     self:updateStatus()
 
     -- Let any tap outside the header roll the dice, not just the button.
@@ -157,7 +169,7 @@ function DiceScreen:openFacesMenu()
     end
 
     MenuHelper.openPickerMenu{
-        title      = _("Number of faces"),
+        title      = _("Faces"),
         items      = items,
         current_id = is_preset and current or nil,
         parent     = self,
@@ -219,7 +231,7 @@ function DiceScreen:openDiceMenu()
         items[#items + 1] = { id = n, text = T(_("%1 dice"), n) }
     end
     MenuHelper.openPickerMenu{
-        title      = _("Number of dice"),
+        title      = _("Dice"),
         items      = items,
         current_id = self.board.num_dice,
         parent     = self,
@@ -240,7 +252,7 @@ end
 -- ---------------------------------------------------------------------------
 
 function DiceScreen:updateStatus()
-    local status = T(_("Faces: %1  |  Dice: %2"), self.board.num_faces, self.board.num_dice)
+    local status = self:joinStatus(T(_("%1 dice"), self.board.num_dice), "d" .. self.board.num_faces)
     ScreenBase.updateStatus(self, status)
 end
 

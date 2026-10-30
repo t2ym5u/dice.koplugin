@@ -1,4 +1,5 @@
 local Blitbuffer      = require("ffi/blitbuffer")
+local Device           = require("device")
 local Font             = require("ui/font")
 local Geom             = require("ui/geometry")
 local InputContainer   = require("ui/widget/container/inputcontainer")
@@ -6,6 +7,12 @@ local RenderText       = require("ui/rendertext")
 local UIManager        = require("ui/uimanager")
 local _                = require("i18n")
 local T                = require("ffi/util").template
+
+local Screen = Device.screen
+
+-- Font:getFace() scales its size by the screen DPI; sizes derived from pixel
+-- dimensions are divided by this so they land at the intended pixel size.
+local DPI_SCALE = Screen:scaleBySize(1000) / 1000
 
 local C_BG     = Blitbuffer.COLOR_WHITE
 local C_BORDER = Blitbuffer.COLOR_BLACK
@@ -25,12 +32,15 @@ local PIP_LAYOUT = {
 
 -- Pick the largest font size (<= a soft cap) whose rendering of `label`
 -- still fits within a `side`x`side` box.
+-- Measured without a width cap (a cap of `side` would clip m.x and accept every
+-- size), and the ink height is y_top + y_bottom (both are distances from the
+-- baseline).
 local function fitNumberFace(side, label)
-    local size = math.max(10, math.floor(side * 0.6))
+    local size = math.max(10, math.floor(side * 0.6 / DPI_SCALE))
     while size > 8 do
         local face = Font:getFace("cfont", size)
-        local m = RenderText:sizeUtf8Text(0, side, face, label, true, false)
-        if m.x <= side * 0.8 and (m.y_bottom - m.y_top) <= side * 0.8 then
+        local m = RenderText:sizeUtf8Text(0, side * 10, face, label, true, false)
+        if m.x <= side * 0.8 and (m.y_top + m.y_bottom) <= side * 0.8 then
             return face
         end
         size = size - 1
@@ -64,7 +74,8 @@ function DiceBoardWidget:_layout()
     local sum_h = 0
     self.sum_margin = math.floor(mh * 0.04)
     if nd > 1 then
-        self.sum_face = Font:getFace("cfont", math.max(14, math.floor(math.min(mw, mh) * 0.06)))
+        self.sum_face = Font:getFace("cfont",
+            math.max(14, math.floor(math.min(mw, mh) * 0.06 / DPI_SCALE)))
         local m = RenderText:sizeUtf8Text(0, mw, self.sum_face, "0", true, false)
         sum_h = m.y_top + m.y_bottom + self.sum_margin
     end
@@ -122,7 +133,8 @@ function DiceBoardWidget:_drawNumber(bb, dx, dy, s, value)
     local label = tostring(value)
     local m  = RenderText:sizeUtf8Text(0, s, self.num_face, label, true, false)
     local tx = dx + math.floor((s - m.x) / 2)
-    local ty = dy + math.floor((s - (m.y_bottom - m.y_top)) / 2) + m.y_bottom
+    -- Baseline that puts the ink's vertical centre on the die's centre.
+    local ty = dy + math.floor(s / 2 + (m.y_top - m.y_bottom) / 2)
     RenderText:renderUtf8Text(bb, tx, ty, self.num_face, label, true, false, C_TEXT)
 end
 
